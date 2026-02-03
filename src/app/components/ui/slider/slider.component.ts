@@ -1,8 +1,7 @@
-import { Component, ElementRef, model, output, viewChild } from '@angular/core';
-import { Slider } from '../../../types/slider.interface';
+import { Component, ElementRef, viewChild, model, output } from '@angular/core';
 import { Subscription, fromEvent, debounceTime, map } from 'rxjs';
-
-const DEBOUNCE_MS: number = 150;
+import { SLIDER_DEBOUNCE_MS } from '../../../constants/delays';
+import { Slider } from '../../../types/slider.interface';
 
 @Component({
   selector: 'app-slider',
@@ -20,7 +19,7 @@ export class SliderComponent {
 
   ngOnInit(): void {
     this.valueSub = fromEvent(this.input().nativeElement, 'input').pipe(
-      debounceTime(DEBOUNCE_MS),
+      debounceTime(SLIDER_DEBOUNCE_MS),
       map(event => Number(((event as Event).target as HTMLInputElement).value))
     ).subscribe(value => this.valueChange.emit(value));
   }

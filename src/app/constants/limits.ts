@@ -20,5 +20,9 @@ export const LIMITS: Limits = {
   wallThickness: {
     min: 1,
     max: 10
+  },
+  pathThickness: {
+    min: 2,
+    max: 8
   }
 }

@@ -1,12 +1,13 @@
-import { Component, computed, effect, ElementRef, input, signal, viewChild } from '@angular/core';
-import { Maze } from '../../types/maze.type';
-import { Direction } from '../../constants/direction.enum';
-import { MazeService } from '../../services/maze.service';
-import { Settings } from '../../types/settings.type';
-import { Position } from '../../types/position.interface';
+import { Component, ElementRef, viewChild, signal, input, computed, effect } from '@angular/core';
 import { NgClass } from '@angular/common';
-
-const REDRAW_DELAY_MS: number = 100;
+import { timer, take } from 'rxjs';
+import { Direction } from '../../constants/direction.enum';
+import { BG_COLOR, WALL_COLOR, PATH_COLOR } from '../../constants/default-colors';
+import { REDRAW_DELAY_MS } from '../../constants/delays';
+import { Position } from '../../types/position.interface';
+import { Maze } from '../../types/maze.type';
+import { Settings } from '../../types/settings.type';
+import { MazeService } from '../../services/maze.service';
 
 @Component({
   selector: 'app-maze',
@@ -29,14 +30,14 @@ export class MazeComponent {
 
   constructor(private mazeService: MazeService) {
     effect(() => {
-      this.width();
-      this.height();
+      this.maze();
+      this.settings();
       this.isGenerated();
       this.isDisplayed.set(false);
-      setTimeout(() => {
+      timer(REDRAW_DELAY_MS).pipe(take(1)).subscribe(() => {
         this.isDisplayed.set(true);
         this.drawMaze(this.maze(), this.settings(), this.isGenerated());
-      }, REDRAW_DELAY_MS);
+      });
     });
   }
 
@@ -73,15 +74,15 @@ export class MazeComponent {
     this.drawGrid(maze, settings, canvas, ctx);
     if (isGenerated) {
       this.drawEntrance(settings, ctx);
-      this.drawPaths(maze, settings, ctx);
+      this.drawWays(maze, settings, ctx);
       this.drawExit(maze, settings, ctx);
     }
   }
 
   drawGrid(maze: Maze, settings: Settings, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = BG_COLOR;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'grey';
+    ctx.fillStyle = WALL_COLOR;
     [...Array(this.mazeService.width(maze) + 1).keys()].forEach(index => {
       const x: number = this.blockPositionX(settings, index) - settings.wallThickness;
       ctx.fillRect(x, 0, settings.wallThickness, canvas.height);
@@ -92,42 +93,18 @@ export class MazeComponent {
     });
   }
 
-  drawPaths(maze: Maze, settings: Settings, ctx: CanvasRenderingContext2D): void {
+  drawWays(maze: Maze, settings: Settings, ctx: CanvasRenderingContext2D): void {
     maze.forEach((column, x) => {
       column.forEach((_, y) => {
-        this.maze()[x][y].forEach(dir => {
-          switch (dir) {
+        this.maze()[x][y].forEach(direction => {
+          switch (direction) {
             case Direction.down:
-              ctx.fillStyle = 'black';
-              ctx.fillRect(
-                this.blockPositionX(settings, x),
-                this.blockPositionY(settings, y + 1) - settings.wallThickness,
-                settings.blockSize.width,
-                settings.wallThickness
-              );
-              ctx.fillStyle = 'green';
-              ctx.fillRect(
-                this.blockCenterX(settings, x) - settings.pathThickness / 2,
-                this.blockCenterY(settings, y),
-                settings.pathThickness,
-                settings.blockSize.height + settings.wallThickness
-              );
+              this.removeWallSegmentDown(settings, { x, y }, ctx);
+              if (settings.showPaths) this.drawPathSegmentDown(settings, { x, y }, ctx);
               break;
             case Direction.right:
-              ctx.fillStyle = 'black';
-              ctx.fillRect(
-                this.blockPositionX(settings, x + 1) - settings.wallThickness,
-                this.blockPositionY(settings, y),
-                settings.wallThickness,
-                settings.blockSize.height
-              );
-              ctx.fillStyle = 'green';
-              ctx.fillRect(
-                this.blockCenterX(settings, x),
-                this.blockCenterY(settings, y) - settings.pathThickness / 2,
-                settings.blockSize.width + settings.wallThickness,
-                settings.pathThickness
-              );
+              this.removeWallSegmentRight(settings, { x, y }, ctx);
+              if (settings.showPaths) this.drawPathSegmentRight(settings, { x, y }, ctx);
               break;
             default:
               break;
@@ -137,31 +114,72 @@ export class MazeComponent {
     });
   }
 
-  drawEntrance(settings: Settings, ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, settings.wallThickness, settings.wallThickness, settings.blockSize.height);
-    ctx.fillStyle = 'green';
-    ctx.fillRect(0, this.blockCenterY(settings, 0) - 1, settings.blockSize.width / 2 + settings.wallThickness, 2);
+  removeWallSegmentDown(settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = BG_COLOR;
+    ctx.fillRect(
+      this.blockPositionX(settings, position.x),
+      this.blockPositionY(settings, position.y + 1) - settings.wallThickness,
+      settings.blockSize.width,
+      settings.wallThickness
+    );
   }
 
-  drawExit(maze: Maze, settings: Settings, ctx: CanvasRenderingContext2D): void {
-    const lastBlock: Position = {
-      x: this.blockPositionX(settings, this.mazeService.width(maze) - 1),
-      y: this.blockPositionY(settings, this.mazeService.height(maze) - 1)
-    };
-    ctx.fillStyle = 'black';
+  drawPathSegmentDown(settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = PATH_COLOR;
     ctx.fillRect(
-      lastBlock.x + settings.blockSize.width,
-      lastBlock.y,
+      this.blockCenterX(settings, position.x) - settings.pathThickness / 2,
+      this.blockCenterY(settings, position.y) - settings.pathThickness / 2,
+      settings.pathThickness,
+      settings.blockSize.height + settings.wallThickness + settings.pathThickness
+    );
+  }
+
+  removeWallSegmentRight(settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = BG_COLOR;
+    ctx.fillRect(
+      this.blockPositionX(settings, position.x + 1) - settings.wallThickness,
+      this.blockPositionY(settings, position.y),
       settings.wallThickness,
       settings.blockSize.height
     );
-    ctx.fillStyle = 'green';
+  }
+
+  drawPathSegmentRight(settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = PATH_COLOR;
     ctx.fillRect(
-      lastBlock.x + settings.blockSize.width / 2,
-      lastBlock.y + settings.blockSize.height / 2 - 1,
+      this.blockCenterX(settings, position.x) - settings.pathThickness / 2,
+      this.blockCenterY(settings, position.y) - settings.pathThickness / 2,
+      settings.blockSize.width + settings.wallThickness + settings.pathThickness,
+      settings.pathThickness
+    );
+  }
+
+  drawEntrance(settings: Settings, ctx: CanvasRenderingContext2D): void {
+    this.removeWallSegmentRight(settings, { x: -1, y: 0 }, ctx);
+    if (!settings.showPaths) return;
+    ctx.fillStyle = PATH_COLOR;
+    ctx.fillRect(
+      0,
+      this.blockCenterY(settings, 0) - settings.pathThickness / 2,
+      settings.blockSize.width / 2 + settings.wallThickness,
+      settings.pathThickness
+    );
+  }
+
+  drawExit(maze: Maze, settings: Settings, ctx: CanvasRenderingContext2D): void {
+    const lastBlockPosition : Position = {
+      x: this.mazeService.width(maze) - 1,
+      y: this.mazeService.height(maze) - 1
+    }
+    this.removeWallSegmentRight(settings, lastBlockPosition, ctx);
+    if (!settings.showPaths) return;
+    ctx.fillStyle = PATH_COLOR;
+    ctx.fillRect(
+      this.blockPositionX(settings, lastBlockPosition.x) + settings.blockSize.width / 2,
+      this.blockPositionY(settings, lastBlockPosition.y) 
+        + settings.blockSize.height / 2 - settings.pathThickness / 2,
       settings.blockSize.width + settings.wallThickness,
-      2
+      settings.pathThickness
     );
   }
 

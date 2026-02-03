@@ -1,16 +1,18 @@
-import { Component, computed, model } from '@angular/core';
-import { MazeService } from '../../services/maze.service';
+import { Component, computed, model, signal } from '@angular/core';
+import { LIMITS } from '../../constants/limits';
+import { DEFAULT_START } from '../../constants/default-maze';
+import { Size } from '../../types/size.interface';
 import { Maze } from '../../types/maze.type';
 import { Settings } from '../../types/settings.type';
-import { SliderComponent } from '../ui/slider/slider.component';
 import { Slider } from '../../types/slider.interface';
-import { LIMITS } from '../../constants/limits';
-import { Size } from '../../types/size.interface';
-import { DEFAULT_START } from '../../constants/default-maze';
+import { Checkbox } from '../../types/checkbox.interface';
+import { SliderComponent } from '../ui/slider/slider.component';
+import { CheckboxComponent } from '../ui/checkbox/checkbox.component';
+import { MazeService } from '../../services/maze.service';
 
 @Component({
   selector: 'app-controls',
-  imports: [SliderComponent],
+  imports: [SliderComponent, CheckboxComponent],
   templateUrl: './controls.component.html',
   styleUrl: './controls.component.scss',
 })
@@ -21,35 +23,62 @@ export class ControlsComponent {
   isGenerated = model.required<boolean>();
 
   mazeWidth = computed<Slider>(() => ({
+    name: 'Maze Width',
     range: LIMITS.mazeWidth,
     step: 1,
     value: this.mazeService.width(this.maze())
   }));
 
   mazeHeight = computed<Slider>(() => ({
+    name: 'Maze Height',
     range: LIMITS.mazeHeight,
     step: 1,
     value: this.mazeService.height(this.maze())
   }));
 
+  keepMazeSquare = signal<Checkbox>({
+    name: 'Keep Square',
+    value: false
+  });
+
   blockWidth = computed<Slider>(() => ({
+    name: 'Block Width',
     range: LIMITS.blockWidth,
     step: 2,
     value: this.settings().blockSize.width
   }));
 
   blockHeight = computed<Slider>(() => ({
+    name: 'Block Height',
     range: LIMITS.blockHeight,
     step: 2,
     value: this.settings().blockSize.height
   }));
 
+  keepBlockSquare = signal<Checkbox>({
+    name: 'Keep Square',
+    value: false
+  });
+
   wallThickness = computed<Slider>(() => ({
+    name: 'Wall Thicknness',
     range: LIMITS.wallThickness,
     step: 1,
     value: this.settings().wallThickness
   }));
-  
+
+  pathThickness = computed<Slider>(() => ({
+    name: 'Path Thicknness',
+    range: LIMITS.pathThickness,
+    step: 2,
+    value: this.settings().pathThickness
+  }));
+
+  showPaths = computed<Checkbox>(() => ({
+    name: 'Show Paths',
+    value: this.settings().showPaths
+  }));
+    
   constructor(private mazeService: MazeService) { }
 
   generateMaze(): void {
@@ -67,7 +96,7 @@ export class ControlsComponent {
   setMazeWidth(width: number): void {
     const newSize: Size = {
       width,
-      height: this.mazeService.height(this.maze())
+      height: this.keepMazeSquare().value ? width : this.mazeService.height(this.maze())
     }
     this.maze.set(this.mazeService.createMazeSpace(newSize));
     this.isGenerated.set(false);
@@ -75,29 +104,53 @@ export class ControlsComponent {
 
   setMazeHeight(height: number): void {
     const newSize: Size = {
-      width: this.mazeService.width(this.maze()),
+      width: this.keepMazeSquare().value ? height : this.mazeService.width(this.maze()),
       height
     }
     this.maze.set(this.mazeService.createMazeSpace(newSize));
     this.isGenerated.set(false);
   }
 
+  setKeepMazeSquare(value: boolean): void {
+    this.keepMazeSquare.update(current => ({ ...current, value }));
+  }
+
   setBlockWidth(width: number): void {
     this.settings.update(value => ({
       ...value,
-      blockSize: { ...value.blockSize, width }
+      blockSize: {
+        ...value.blockSize,
+        width,
+        height: this.keepBlockSquare().value ? width : value.blockSize.height
+      }
     }));
   }
 
   setBlockHeight(height: number): void {
     this.settings.update(value => ({
       ...value,
-      blockSize: { ...value.blockSize, height }
+      blockSize: {
+        ...value.blockSize,
+        width: this.keepBlockSquare().value ? height : value.blockSize.width,
+        height
+      }
     }));
+  }
+
+  setKeepBlockSquare(value: boolean): void {
+    this.keepBlockSquare.update(current => ({ ...current, value }));
   }
 
   setWallThickness(wallThickness: number): void {
     this.settings.update(value => ({ ...value, wallThickness }));
+  }
+
+  setPathThickness(pathThickness: number): void {
+    this.settings.update(value => ({ ...value, pathThickness }));
+  }
+
+  togglePaths(showPaths: boolean): void {
+    this.settings.update(value => ({ ...value, showPaths }));
   }
 
 }

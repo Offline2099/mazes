@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Signal, signal, WritableSignal } from '@angular/core';
 import { Maze } from './types/maze.type';
 import { ControlsComponent } from './components/controls/controls.component';
 import { MazeComponent } from './components/maze/maze.component';
@@ -15,7 +15,7 @@ import { DEFAULT_SETTINGS } from './constants/default-settings';
   styleUrl: './app.scss'
 })
 export class App {
-  
+
   maze: Maze;
   settings: Settings;
   isGenerated: boolean = false;

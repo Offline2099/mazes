@@ -5,6 +5,7 @@ export const DEFAULT_SETTINGS: Settings = {
     width: 30,
     height: 30
   },
-  wallThickness: 3,
-  pathThickness: 2
+  wallThickness: 2,
+  pathThickness: 2,
+  showPaths: true
 }

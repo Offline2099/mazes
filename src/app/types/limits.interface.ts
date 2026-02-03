@@ -6,4 +6,5 @@ export interface Limits {
   blockWidth: Range;
   blockHeight: Range;
   wallThickness: Range;
+  pathThickness: Range;
 }

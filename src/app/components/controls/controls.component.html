@@ -1,7 +1,27 @@
-<app-slider [slider]="mazeWidth()" (valueChange)="setMazeWidth($event)" />
-<app-slider [slider]="mazeHeight()" (valueChange)="setMazeHeight($event)" />
-<app-slider [slider]="blockWidth()" (valueChange)="setBlockWidth($event)" />
-<app-slider [slider]="blockHeight()" (valueChange)="setBlockHeight($event)" />
-<app-slider [slider]="wallThickness()" (valueChange)="setWallThickness($event)" />
 
-<button type="button" (click)="generateMaze()">Generate</button>
+<div class="wrapper">
+  <div>
+    <h2>Maze Dimensions</h2>
+    <app-slider [slider]="mazeWidth()" (valueChange)="setMazeWidth($event)" />
+    <app-slider [slider]="mazeHeight()" (valueChange)="setMazeHeight($event)" />
+    <app-checkbox [checkbox]="keepMazeSquare()" (valueChange)="setKeepMazeSquare($event)" />
+  </div>
+  <div>
+    <h2>Maze Block Dimensions</h2>
+    <app-slider [slider]="blockWidth()" (valueChange)="setBlockWidth($event)" />
+    <app-slider [slider]="blockHeight()" (valueChange)="setBlockHeight($event)" />
+    <app-checkbox [checkbox]="keepBlockSquare()" (valueChange)="setKeepBlockSquare($event)" />
+  </div>
+</div>
+
+<div>
+  <h2>Maze Style</h2>
+  <app-slider [slider]="wallThickness()" (valueChange)="setWallThickness($event)" />
+  <app-slider [slider]="pathThickness()" (valueChange)="setPathThickness($event)" />
+  <app-checkbox [checkbox]="showPaths()" (valueChange)="togglePaths($event)" />
+</div>
+
+<div>
+  <button type="button" (click)="generateMaze()">Generate</button>
+</div>
+
