@@ -9,8 +9,8 @@
 body {
   min-width: 320px;
   min-height: 100vh;
-  background-color: black;
-  color: #aaa;
+  background-color: $bg-base;
+  color: $text-normal;
   font-family: 'Open Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

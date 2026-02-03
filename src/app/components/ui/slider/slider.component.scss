@@ -1,0 +1,154 @@
+@use '../../../../scss' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid $border-normal;
+  border-radius: 8px;
+  box-shadow: 0 0 20px 20px $element-shadow inset;
+  transition: .2s .2s;
+  @include tablet {
+    padding: 5px;
+  }
+}
+
+.slider-header {
+  padding: 2px 5px;
+  border-bottom: 1px solid $border-normal;
+  text-align: center;
+  @include tablet {
+    padding: 0 5px;
+  }
+}
+
+.name,
+.value {
+  font-size: 16px;
+  @include tablet {
+    font-size: 15px;
+  }
+  @include mobile {
+    font-size: 14px;
+  }
+}
+
+.name {
+  font-weight: 400;
+}
+
+.value {
+  display: inline-block;
+  min-width: 35px;
+  font-weight: 500;
+}
+
+//=============================================================================
+//  Range Input Slider
+//=============================================================================
+
+input[type=range] {
+  position: relative;
+  z-index: 10;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 18px;
+  background: transparent;
+  &:focus {
+    outline: none;
+  }
+}
+
+//=============================================================================
+//  Range Input Slider > Input Track
+//=============================================================================
+
+$track-color: linear-gradient(90deg, teal, darkgreen);
+
+input[type=range] {
+  &::-webkit-slider-runnable-track,
+  &::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    border: none;
+    border-radius: 3px;
+    background: $track-color;
+    box-shadow: none;
+    cursor: pointer;
+    @include mobile {
+      height: 4px;
+      border-radius: 2px;
+    }
+  }
+  &:focus::-webkit-slider-runnable-track {
+    background: $track-color;
+  }
+  &::-ms-track {
+    width: 100%;
+    height: 6px;  
+    border-color: transparent;
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+    @include mobile {
+      height: 4px;
+    }
+  }
+  &::-ms-fill-lower,
+  &::-ms-fill-upper {
+    border: none;
+    border-radius: 3px;
+    background: $track-color;
+    box-shadow: none;
+    @include mobile {
+      border-radius: 2px;
+    }
+  }
+  &:focus {
+    &::-ms-fill-lower,
+    &::-ms-fill-upper {
+      background: $track-color;
+    }
+  }
+}
+
+//=============================================================================
+//  Range Input Slider > Input Thumb
+//=============================================================================
+
+$thumb-color: #999;
+
+@mixin range-thumb {
+  height: 14px;
+  width: 14px;
+  border: none;
+  border-radius: 50%;
+  background: $thumb-color;
+  box-shadow: none;
+  cursor: pointer;
+  @include tablet {
+    height: 12px;
+    width: 12px;
+  }
+  @include mobile {
+    height: 10px;
+    width: 10px;
+  }
+}
+
+input[type=range] {
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    margin-top: -4.5px;
+    @include range-thumb;
+  }
+  &::-moz-range-thumb {
+    @include range-thumb;
+  }
+  &::-ms-thumb {
+    margin-top: 1px;
+    @include range-thumb;
+  }
+}

@@ -1,12 +1,11 @@
-
 <div class="wrapper">
-  <div>
+  <div class="controls-group">
     <h2>Maze Dimensions</h2>
     <app-slider [slider]="mazeWidth()" (valueChange)="setMazeWidth($event)" />
     <app-slider [slider]="mazeHeight()" (valueChange)="setMazeHeight($event)" />
     <app-checkbox [checkbox]="keepMazeSquare()" (valueChange)="setKeepMazeSquare($event)" />
   </div>
-  <div>
+  <div class="controls-group">
     <h2>Maze Block Dimensions</h2>
     <app-slider [slider]="blockWidth()" (valueChange)="setBlockWidth($event)" />
     <app-slider [slider]="blockHeight()" (valueChange)="setBlockHeight($event)" />
@@ -14,14 +13,23 @@
   </div>
 </div>
 
-<div>
+<div class="controls-group">
   <h2>Maze Style</h2>
   <app-slider [slider]="wallThickness()" (valueChange)="setWallThickness($event)" />
-  <app-slider [slider]="pathThickness()" (valueChange)="setPathThickness($event)" />
-  <app-checkbox [checkbox]="showPaths()" (valueChange)="togglePaths($event)" />
+  <app-slider
+    [ngClass]="{ 'disabled': !isGenerated() || !settings().showPaths }"
+    [slider]="pathThickness()"
+    (valueChange)="setPathThickness($event)"
+  />
+  <app-checkbox
+    [ngClass]="{ 'disabled': !isGenerated() }"
+    [checkbox]="showPaths()"
+    (valueChange)="togglePaths($event)"
+  />
 </div>
 
 <div>
   <button type="button" (click)="generateMaze()">Generate</button>
+  <button type="button" (click)="resetMaze()">Reset</button>
 </div>
 

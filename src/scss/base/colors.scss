@@ -1,0 +1,18 @@
+@use 'sass:color';
+
+// Text
+$text-normal: #aaa;
+
+// Backgrounds
+$bg-base: black;
+$bg-area: #242424;
+$bg-button: #2a2a2a;
+$bg-button-hovered: #333;
+$bg-element: color.adjust($bg-base, $alpha: -0.7);
+
+// Borders
+$border-normal: #444;
+
+// Shadows
+$layout-shadow: color.adjust(black, $alpha: -0.7);
+$element-shadow: color.adjust(#333, $alpha: -0.5);

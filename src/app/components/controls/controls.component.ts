@@ -1,6 +1,10 @@
 import { Component, computed, model, signal } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { timer, take } from 'rxjs';
 import { LIMITS } from '../../constants/limits';
-import { DEFAULT_START } from '../../constants/default-maze';
+import { DEFAULT_SIZE, DEFAULT_START } from '../../constants/default-maze';
+import { DEFAULT_SETTINGS } from '../../constants/default-settings';
+import { REDRAW_DELAY_MS } from '../../constants/delays';
 import { Size } from '../../types/size.interface';
 import { Maze } from '../../types/maze.type';
 import { Settings } from '../../types/settings.type';
@@ -12,7 +16,7 @@ import { MazeService } from '../../services/maze.service';
 
 @Component({
   selector: 'app-controls',
-  imports: [SliderComponent, CheckboxComponent],
+  imports: [NgClass, SliderComponent, CheckboxComponent],
   templateUrl: './controls.component.html',
   styleUrl: './controls.component.scss',
 })
@@ -37,7 +41,7 @@ export class ControlsComponent {
   }));
 
   keepMazeSquare = signal<Checkbox>({
-    name: 'Keep Square',
+    name: 'Square Maze',
     value: false
   });
 
@@ -56,7 +60,7 @@ export class ControlsComponent {
   }));
 
   keepBlockSquare = signal<Checkbox>({
-    name: 'Keep Square',
+    name: 'Square Block',
     value: false
   });
 
@@ -86,11 +90,19 @@ export class ControlsComponent {
       this.maze.set(this.mazeService.createMazeSpace(this.mazeService.size(this.maze())));
       this.isGenerated.set(false);
     }
-    setTimeout(() => {
+    timer(REDRAW_DELAY_MS).pipe(take(1)).subscribe(() => {
       this.isGenerated.set(true);
       this.maze.set(this.mazeService.generateMaze(this.maze(), DEFAULT_START));
-    }, 100);
-    
+    });
+  }
+
+  resetMaze(): void {
+    this.settings.set({ 
+      ...DEFAULT_SETTINGS, 
+      blockSize: { ...DEFAULT_SETTINGS.blockSize }
+    });
+    this.maze.set(this.mazeService.createMazeSpace(DEFAULT_SIZE));
+    this.isGenerated.set(false);
   }
 
   setMazeWidth(width: number): void {

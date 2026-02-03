@@ -1,4 +1,14 @@
+@use 'sass:color';
+@use '../scss' as *;
+
 $footer-height: 100px;
+
+@mixin layout-area {
+  position: relative;
+  z-index: 2;
+  background-color: $bg-area;
+  box-shadow: 0 0 2px 2px $layout-shadow;
+}
 
 :host {
   display: flex;
@@ -10,18 +20,27 @@ header {
   display: flex;
   justify-content: center;
   padding: 10px 0;
-  background-color: #222;
   font-size: 26px;
+  letter-spacing: 0.01em;
+  @include layout-area;
+  @include mobile {
+    font-size: 20px;
+  }
 }
 
 main {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  background:
+    linear-gradient(45deg, color.adjust(blue, $alpha: -0.8), color.adjust(purple, $alpha: -0.9)),
+    linear-gradient(-45deg, color.adjust(red, $alpha: -0.9), color.adjust(green, $alpha: -0.5));
 }
 
 footer {
   min-height: $footer-height;
   margin-top: auto;
-  background-color: #222;
+  @include layout-area;
 }
