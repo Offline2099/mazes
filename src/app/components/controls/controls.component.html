@@ -1,0 +1,7 @@
+<app-slider [slider]="mazeWidth()" (valueChange)="setMazeWidth($event)" />
+<app-slider [slider]="mazeHeight()" (valueChange)="setMazeHeight($event)" />
+<app-slider [slider]="blockWidth()" (valueChange)="setBlockWidth($event)" />
+<app-slider [slider]="blockHeight()" (valueChange)="setBlockHeight($event)" />
+<app-slider [slider]="wallThickness()" (valueChange)="setWallThickness($event)" />
+
+<button type="button" (click)="generateMaze()">Generate</button>

@@ -1,1 +1,20 @@
-/* You can add global styles to this file, and also import other style files */
+@use './scss' as *;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: black;
+  color: #aaa;
+  font-family: 'Open Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: antialiased;
+  text-rendering: optimizeLegibility;
+  user-select: none;
+}

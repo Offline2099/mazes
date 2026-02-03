@@ -1,0 +1,13 @@
+:host {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+}
+
+canvas {
+  transition: .3s;
+  &.hidden {
+    transition: 0;
+    opacity: 0;
+  }
+}

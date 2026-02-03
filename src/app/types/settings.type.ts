@@ -1,0 +1,7 @@
+import { Size } from './size.interface';
+
+export interface Settings {
+  blockSize: Size;
+  wallThickness: number;
+  pathThickness: number;
+}
