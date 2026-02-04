@@ -1,6 +1,11 @@
 <header>Maze Generator</header>
 <main>
-  <app-controls [(maze)]="maze" [(settings)]="settings" [(isGenerated)]="isGenerated" />
+  <app-controls
+    [(maze)]="maze"
+    [(settings)]="settings"
+    [(isGenerated)]="isGenerated"
+    (save)="saveMaze()"
+  />
   <app-maze [maze]="maze" [settings]="settings" [isGenerated]="isGenerated" />
 </main>
 <footer>

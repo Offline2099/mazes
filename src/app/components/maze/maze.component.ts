@@ -7,6 +7,7 @@ import { REDRAW_DELAY_MS } from '../../constants/delays';
 import { Position } from '../../types/position.interface';
 import { Maze } from '../../types/maze.type';
 import { Settings } from '../../types/settings.type';
+import { UtilityService } from '../../services/utility.service';
 import { MazeService } from '../../services/maze.service';
 
 @Component({
@@ -28,7 +29,11 @@ export class MazeComponent {
 
   isDisplayed = signal<boolean>(true);
 
-  constructor(private mazeService: MazeService) {
+  constructor(
+    private container: ElementRef,
+    private utility: UtilityService,
+    private mazeService: MazeService
+  ) {
     effect(() => {
       this.maze();
       this.settings();
@@ -180,6 +185,14 @@ export class MazeComponent {
         + settings.blockSize.height / 2 - settings.pathThickness / 2,
       settings.blockSize.width + settings.wallThickness,
       settings.pathThickness
+    );
+  }
+
+  saveMaze(): void {
+    this.utility.downloadAsPNG(
+      this.canvasRef().nativeElement,
+      this.container.nativeElement,
+      'maze'
     );
   }
 

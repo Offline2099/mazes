@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 import { Direction } from '../constants/direction.enum';
 import { Position } from '../types/position.interface';
 import { Range } from '../types/range.interface';
@@ -7,6 +7,12 @@ import { Range } from '../types/range.interface';
   providedIn: 'root'
 })
 export class UtilityService {
+
+  private renderer: Renderer2;
+
+  constructor(rendererFactory: RendererFactory2) {
+    this.renderer = rendererFactory.createRenderer(null, null);
+  }
 
   //===========================================================================
   //  Randomness
@@ -55,6 +61,25 @@ export class UtilityService {
 
   isOutsideArea(rangeX: Range, rangeY: Range, position: Position): boolean {
     return this.isOutsideRange(rangeX, position.x) || this.isOutsideRange(rangeY, position.y);
+  }
+
+  //===========================================================================
+  //  Saving Files
+  //===========================================================================
+
+  downloadAsPNG(canvas: HTMLCanvasElement, container: HTMLElement, fileName: string): void {
+    const url: string = canvas.toDataURL('image/png');
+    this.saveFile(url, fileName, 'png', container);
+  }
+
+  private saveFile(url: string, name: string, extension: string, container: HTMLElement): void {
+    const a: HTMLAnchorElement = this.renderer.createElement('a');
+    this.renderer.setAttribute(a, 'href', url);
+    this.renderer.setAttribute(a, 'download', `${name}.${extension}`);
+    this.renderer.appendChild(container, a);
+    a.click();
+    this.renderer.removeChild(container, a);
+    window.URL.revokeObjectURL(url);
   }
 
 }

@@ -1,4 +1,4 @@
-import { Component, computed, model, signal } from '@angular/core';
+import { Component, computed, model, output, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { timer, take } from 'rxjs';
 import { LIMITS } from '../../constants/limits';
@@ -25,6 +25,8 @@ export class ControlsComponent {
   maze = model.required<Maze>();
   settings = model.required<Settings>();
   isGenerated = model.required<boolean>();
+
+  save = output<void>();
 
   mazeWidth = computed<Slider>(() => ({
     name: 'Maze Width',
@@ -94,6 +96,10 @@ export class ControlsComponent {
       this.isGenerated.set(true);
       this.maze.set(this.mazeService.generateMaze(this.maze(), DEFAULT_START));
     });
+  }
+
+  saveMaze(): void {
+    this.save.emit();
   }
 
   resetMaze(): void {

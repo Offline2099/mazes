@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, viewChild } from '@angular/core';
 import { DEFAULT_SIZE } from './constants/default-maze';
 import { DEFAULT_SETTINGS } from './constants/default-settings';
 import { Maze } from './types/maze.type';
@@ -19,12 +19,18 @@ export class App {
   settings: Settings;
   isGenerated: boolean = false;
 
+  mazeComponent = viewChild(MazeComponent);
+
   constructor(private mazeService: MazeService) {
     this.maze = this.mazeService.createMazeSpace(DEFAULT_SIZE);
     this.settings = { 
       ...DEFAULT_SETTINGS, 
       blockSize: { ...DEFAULT_SETTINGS.blockSize }
     };
+  }
+
+  saveMaze(): void {
+    this.mazeComponent()?.saveMaze();
   }
 
 }

@@ -70,7 +70,7 @@ button {
   font-size: 18px;
   font-weight: 400;
   letter-spacing: 0.05em;
-  transition: .2s;
+  transition: .2s .1s;
   cursor: pointer;
   @include hover {
     background-color: $bg-button-hovered;

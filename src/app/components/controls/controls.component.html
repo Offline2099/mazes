@@ -30,6 +30,12 @@
 
 <div>
   <button type="button" (click)="generateMaze()">Generate</button>
+  <button
+    [ngClass]="{ 'disabled': !isGenerated() }"
+    type="button"
+    (click)="saveMaze()">
+    <ng-container>Save</ng-container>
+  </button>
   <button type="button" (click)="resetMaze()">Reset</button>
 </div>
 
