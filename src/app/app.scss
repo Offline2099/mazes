@@ -40,7 +40,22 @@ main {
 }
 
 footer {
+  display: flex;
   min-height: $footer-height;
   margin-top: auto;
   @include layout-area;
+}
+
+.wrapper {
+  display: flex;
+  margin: auto;
+  gap: 15px;
+  a {
+    color: royalblue;
+    text-decoration: none;
+    transition: .2s;
+    @include hover {
+      color: deepskyblue;
+    }
+  }
 }
