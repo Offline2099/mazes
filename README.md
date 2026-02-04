@@ -1,4 +1,4 @@
-# Snake
+# Maze Generator
 
 ## Project Description
 
