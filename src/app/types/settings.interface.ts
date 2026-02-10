@@ -5,4 +5,5 @@ export interface Settings {
   wallThickness: number;
   pathThickness: number;
   showPaths: boolean;
+  showShortestPath: boolean;
 }

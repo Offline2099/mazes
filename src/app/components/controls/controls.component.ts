@@ -2,11 +2,11 @@ import { Component, computed, model, output, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { timer, take } from 'rxjs';
 import { LIMITS } from '../../constants/limits';
-import { DEFAULT_SIZE, DEFAULT_START } from '../../constants/default-maze';
+import { DEFAULT_MAZE_SIZE } from '../../constants/default-maze-size';
 import { DEFAULT_SETTINGS } from '../../constants/default-settings';
 import { REDRAW_DELAY_MS } from '../../constants/delays';
 import { Size } from '../../types/general/size.interface';
-import { Maze } from '../../types/maze.type';
+import { Maze } from '../../types/maze.interface';
 import { Settings } from '../../types/settings.interface';
 import { Slider } from '../../types/ui/slider.interface';
 import { Checkbox } from '../../types/ui/checkbox.interface';
@@ -62,7 +62,7 @@ export class ControlsComponent {
   }));
 
   keepBlockSquare = signal<Checkbox>({
-    name: 'Square Block',
+    name: 'Square Blocks',
     value: false
   });
 
@@ -84,17 +84,22 @@ export class ControlsComponent {
     name: 'Show Paths',
     value: this.settings().showPaths
   }));
+
+  showShortestPath = computed<Checkbox>(() => ({
+    name: 'Show Shortest Path',
+    value: this.settings().showShortestPath
+  }));
     
   constructor(private mazeService: MazeService) { }
 
   generateMaze(): void {
     if (this.isGenerated()) {
-      this.maze.set(this.mazeService.createMazeSpace(this.mazeService.size(this.maze())));
+      this.maze.set(this.mazeService.createMazeObject(this.mazeService.size(this.maze())));
       this.isGenerated.set(false);
     }
     timer(REDRAW_DELAY_MS).pipe(take(1)).subscribe(() => {
       this.isGenerated.set(true);
-      this.maze.set(this.mazeService.generateMaze(this.maze(), DEFAULT_START));
+      this.maze.set(this.mazeService.generateMaze(this.maze()));
     });
   }
 
@@ -107,7 +112,7 @@ export class ControlsComponent {
       ...DEFAULT_SETTINGS, 
       blockSize: { ...DEFAULT_SETTINGS.blockSize }
     });
-    this.maze.set(this.mazeService.createMazeSpace(DEFAULT_SIZE));
+    this.maze.set(this.mazeService.createMazeObject(DEFAULT_MAZE_SIZE));
     this.isGenerated.set(false);
   }
 
@@ -116,7 +121,7 @@ export class ControlsComponent {
       width,
       height: this.keepMazeSquare().value ? width : this.mazeService.height(this.maze())
     }
-    this.maze.set(this.mazeService.createMazeSpace(newSize));
+    this.maze.set(this.mazeService.createMazeObject(newSize));
     this.isGenerated.set(false);
   }
 
@@ -125,7 +130,7 @@ export class ControlsComponent {
       width: this.keepMazeSquare().value ? height : this.mazeService.width(this.maze()),
       height
     }
-    this.maze.set(this.mazeService.createMazeSpace(newSize));
+    this.maze.set(this.mazeService.createMazeObject(newSize));
     this.isGenerated.set(false);
   }
 
@@ -169,6 +174,10 @@ export class ControlsComponent {
 
   togglePaths(showPaths: boolean): void {
     this.settings.update(value => ({ ...value, showPaths }));
+  }
+
+  toggleShortestPath(showShortestPath: boolean): void {
+    this.settings.update(value => ({ ...value, showShortestPath }));
   }
 
 }

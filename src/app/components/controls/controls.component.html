@@ -17,15 +17,22 @@
   <h2>Maze Style</h2>
   <app-slider [slider]="wallThickness()" (valueChange)="setWallThickness($event)" />
   <app-slider
-    [ngClass]="{ 'disabled': !isGenerated() || !settings().showPaths }"
+    [ngClass]="{ 'disabled': !isGenerated() || (!settings().showPaths && !settings().showShortestPath) }"
     [slider]="pathThickness()"
     (valueChange)="setPathThickness($event)"
   />
-  <app-checkbox
-    [ngClass]="{ 'disabled': !isGenerated() }"
-    [checkbox]="showPaths()"
-    (valueChange)="togglePaths($event)"
-  />
+  <div>
+    <app-checkbox
+      [ngClass]="{ 'disabled': !isGenerated() }"
+      [checkbox]="showPaths()"
+      (valueChange)="togglePaths($event)"
+    />
+    <app-checkbox
+      [ngClass]="{ 'disabled': !isGenerated() }"
+      [checkbox]="showShortestPath()"
+      (valueChange)="toggleShortestPath($event)"
+    />
+  </div>
 </div>
 
 <div>

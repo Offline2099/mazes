@@ -7,5 +7,6 @@ export const DEFAULT_SETTINGS: Settings = {
   },
   wallThickness: 2,
   pathThickness: 2,
-  showPaths: true
+  showPaths: true,
+  showShortestPath: true
 }

@@ -30,6 +30,10 @@ export class UtilityService {
   //  Geometry
   //===========================================================================
 
+  isSamePosition(a: Position, b: Position): boolean {
+    return a.x === b.x && a.y === b.y;
+  }
+
   private readonly OPPOSITE_DIRECTION_MAP: Record<Direction, Direction> = {
     [Direction.up]: Direction.down,
     [Direction.down]: Direction.up,

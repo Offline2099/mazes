@@ -2,10 +2,10 @@ import { Component, ElementRef, viewChild, signal, input, computed, effect } fro
 import { NgClass } from '@angular/common';
 import { timer, take } from 'rxjs';
 import { Direction } from '../../constants/direction.enum';
-import { BG_COLOR, WALL_COLOR, PATH_COLOR } from '../../constants/default-colors';
+import { BG_COLOR, WALL_COLOR, PATH_COLOR, SHORTEST_PATH_COLOR } from '../../constants/default-colors';
 import { REDRAW_DELAY_MS } from '../../constants/delays';
 import { Position } from '../../types/general/position.interface';
-import { Maze } from '../../types/maze.type';
+import { Maze } from '../../types/maze.interface';
 import { Settings } from '../../types/settings.interface';
 import { UtilityService } from '../../services/utility.service';
 import { MazeService } from '../../services/maze.service';
@@ -99,17 +99,21 @@ export class MazeComponent {
   }
 
   drawWays(maze: Maze, settings: Settings, ctx: CanvasRenderingContext2D): void {
-    maze.forEach((column, x) => {
+    maze.space.forEach((column, x) => {
       column.forEach((_, y) => {
-        this.maze()[x][y].forEach(direction => {
+        this.maze().space[x][y].forEach(direction => {
+          if (settings.showPaths || settings.showShortestPath) 
+            this.drawSpot(maze, settings, { x, y }, ctx);
           switch (direction) {
             case Direction.down:
               this.removeWallSegmentDown(settings, { x, y }, ctx);
-              if (settings.showPaths) this.drawPathSegmentDown(settings, { x, y }, ctx);
+              if (settings.showPaths || settings.showShortestPath) 
+                this.drawPathSegmentDown(maze, settings, { x, y }, ctx);
               break;
             case Direction.right:
               this.removeWallSegmentRight(settings, { x, y }, ctx);
-              if (settings.showPaths) this.drawPathSegmentRight(settings, { x, y }, ctx);
+              if (settings.showPaths || settings.showShortestPath)
+                this.drawPathSegmentRight(maze, settings, { x, y }, ctx);
               break;
             default:
               break;
@@ -117,6 +121,20 @@ export class MazeComponent {
         });
       });
     });
+  }
+
+  drawSpot(maze: Maze, settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
+    const isShortest = this.mazeService.isPositionOnShortestPath(maze, position);
+    ctx.fillStyle = isShortest && settings.showShortestPath
+      ? SHORTEST_PATH_COLOR 
+      : PATH_COLOR;
+    if (!isShortest && !settings.showPaths) return;
+    ctx.fillRect(
+      this.blockCenterX(settings, position.x) - settings.pathThickness / 2,
+      this.blockCenterY(settings, position.y) - settings.pathThickness / 2,
+      settings.pathThickness,
+      settings.pathThickness
+    )
   }
 
   removeWallSegmentDown(settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
@@ -129,13 +147,17 @@ export class MazeComponent {
     );
   }
 
-  drawPathSegmentDown(settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = PATH_COLOR;
+  drawPathSegmentDown(maze: Maze, settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
+    const isShortest: boolean = this.mazeService.isSegmentOnShortestPath(maze, position, Direction.down);
+    if (!isShortest && !settings.showPaths) return;
+    ctx.fillStyle = isShortest && settings.showShortestPath
+      ? SHORTEST_PATH_COLOR 
+      : PATH_COLOR;
     ctx.fillRect(
       this.blockCenterX(settings, position.x) - settings.pathThickness / 2,
-      this.blockCenterY(settings, position.y) - settings.pathThickness / 2,
+      this.blockCenterY(settings, position.y) + settings.pathThickness / 2,
       settings.pathThickness,
-      settings.blockSize.height + settings.wallThickness + settings.pathThickness
+      settings.blockSize.height + settings.wallThickness - settings.pathThickness
     );
   }
 
@@ -149,38 +171,40 @@ export class MazeComponent {
     );
   }
 
-  drawPathSegmentRight(settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = PATH_COLOR;
+  drawPathSegmentRight(maze: Maze, settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
+    const isShortest: boolean = this.mazeService.isSegmentOnShortestPath(maze, position, Direction.right);
+    if (!isShortest && !settings.showPaths) return;
+    ctx.fillStyle = isShortest && settings.showShortestPath
+      ? SHORTEST_PATH_COLOR 
+      : PATH_COLOR;
     ctx.fillRect(
-      this.blockCenterX(settings, position.x) - settings.pathThickness / 2,
+      this.blockCenterX(settings, position.x) + settings.pathThickness / 2,
       this.blockCenterY(settings, position.y) - settings.pathThickness / 2,
-      settings.blockSize.width + settings.wallThickness + settings.pathThickness,
+      settings.blockSize.width + settings.wallThickness - settings.pathThickness,
       settings.pathThickness
     );
   }
 
   drawEntrance(settings: Settings, ctx: CanvasRenderingContext2D): void {
     this.removeWallSegmentRight(settings, { x: -1, y: 0 }, ctx);
-    if (!settings.showPaths) return;
-    ctx.fillStyle = PATH_COLOR;
+    if (!settings.showPaths && !settings.showShortestPath) return;
+    ctx.fillStyle = settings.showShortestPath ? SHORTEST_PATH_COLOR : PATH_COLOR;
     ctx.fillRect(
       0,
       this.blockCenterY(settings, 0) - settings.pathThickness / 2,
-      settings.blockSize.width / 2 + settings.wallThickness,
+      settings.blockSize.width / 2 + settings.wallThickness - settings.pathThickness / 2,
       settings.pathThickness
     );
   }
 
   drawExit(maze: Maze, settings: Settings, ctx: CanvasRenderingContext2D): void {
-    const lastBlockPosition : Position = {
-      x: this.mazeService.width(maze) - 1,
-      y: this.mazeService.height(maze) - 1
-    }
+    const lastBlockPosition : Position = this.mazeService.lastBlockPosition(maze);
     this.removeWallSegmentRight(settings, lastBlockPosition, ctx);
-    if (!settings.showPaths) return;
-    ctx.fillStyle = PATH_COLOR;
+    if (!settings.showPaths && !settings.showShortestPath) return;
+    ctx.fillStyle = settings.showShortestPath ? SHORTEST_PATH_COLOR : PATH_COLOR;
     ctx.fillRect(
-      this.blockPositionX(settings, lastBlockPosition.x) + settings.blockSize.width / 2,
+      this.blockPositionX(settings, lastBlockPosition.x) 
+        + settings.blockSize.width / 2 + settings.pathThickness / 2,
       this.blockPositionY(settings, lastBlockPosition.y) 
         + settings.blockSize.height / 2 - settings.pathThickness / 2,
       settings.blockSize.width + settings.wallThickness,

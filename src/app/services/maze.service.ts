@@ -3,7 +3,7 @@ import { Direction } from '../constants/direction.enum';
 import { Position } from '../types/general/position.interface';
 import { Range } from '../types/general/range.interface';
 import { Size } from '../types/general/size.interface';
-import { Maze } from '../types/maze.type';
+import { Maze } from '../types/maze.interface';
 import { UtilityService } from './utility.service';
 
 @Injectable({
@@ -17,32 +17,38 @@ export class MazeService {
   //  Maze Generation
   //===========================================================================
 
-  createMazeSpace(size: Size): Maze {
-    return Array.from(
-      { length: size.width },
-      () => Array.from({ length: size.height }, () => [])
-    );
+  createMazeObject(size: Size): Maze {
+    return {
+      space: Array.from(
+        { length: size.width },
+        () => Array.from({ length: size.height }, () => [])
+      ),
+      shortestPath: []
+    };
   }
 
-  generateMaze(space: Maze, start: Position): Maze {
-    const path: Position[] = [start];
-    let position: Position = { ...start };
-    let direction: Direction | null = this.randomDirection(space, position);
-    if (direction) space[position.x][position.y].push(direction);
+  generateMaze(maze: Maze): Maze {
+    const entrance: Position = { x: 0, y: 0 };
+    const exit: Position = this.lastBlockPosition(maze);
+    const path: Position[] = [entrance];
+    let position: Position = { ...entrance };
+    let direction: Direction | null = this.randomDirection(maze, position);
+    if (direction) maze.space[position.x][position.y].push(direction);
     while (direction !== null) {
       position = this.utility.move(position, direction);
-      space[position.x][position.y].push(this.utility.oppositeDirection(direction));
-      direction = this.randomDirection(space, position);
-      if (direction) space[position.x][position.y].push(direction);
+      maze.space[position.x][position.y].push(this.utility.oppositeDirection(direction));
+      direction = this.randomDirection(maze, position);
+      if (direction) maze.space[position.x][position.y].push(direction);
       path.push({ ...position });
+      if (this.utility.isSamePosition(position, exit)) maze.shortestPath = [...path];
       while (direction === null && path.length > 1) {
         path.pop();
         position = { ...path[path.length - 1] };
-        direction = this.randomDirection(space, position);
-        if (direction) space[position.x][position.y].push(direction);
+        direction = this.randomDirection(maze, position);
+        if (direction) maze.space[position.x][position.y].push(direction);
       }
     }
-    return space;
+    return maze;
   }
 
   //===========================================================================
@@ -50,11 +56,11 @@ export class MazeService {
   //===========================================================================
 
   width(maze: Maze): number {
-    return maze.length;
+    return maze.space.length;
   }
 
   height(maze: Maze): number {
-    return maze[0].length;
+    return maze.space[0].length;
   }
 
   size(maze: Maze): Size {
@@ -64,8 +70,31 @@ export class MazeService {
     };
   }
 
+  lastBlockPosition(maze: Maze) : Position {
+    return {
+      x: this.width(maze) - 1,
+      y: this.height(maze) - 1
+    };
+  }
+
+  isPositionOnShortestPath(maze: Maze, position: Position): boolean {
+    return maze.shortestPath.find(value => this.utility.isSamePosition(position, value)) !== undefined;
+  }
+
+  isSegmentOnShortestPath(maze: Maze, position: Position, direction: Direction): boolean {
+    for (const [index, value] of maze.shortestPath.entries()) {
+      if (!this.utility.isSamePosition(position, value)) continue;
+      const previous: Position | undefined = maze.shortestPath[index - 1];
+      const next: Position | undefined = maze.shortestPath[index + 1];
+      const directionTo: Position = this.utility.move(position, direction);
+      return (previous && this.utility.isSamePosition(previous, directionTo))
+        || (next && this.utility.isSamePosition(next, directionTo));
+    }
+    return false;
+  }
+
   private isVisited(maze: Maze, position: Position): boolean {
-    return maze[position.x][position.y].length > 0;
+    return maze.space[position.x][position.y].length > 0;
   }
 
   private availableDirections(maze: Maze, position: Position): Direction[] {
