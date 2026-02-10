@@ -2,7 +2,7 @@ import { Component, viewChild } from '@angular/core';
 import { DEFAULT_SIZE } from './constants/default-maze';
 import { DEFAULT_SETTINGS } from './constants/default-settings';
 import { Maze } from './types/maze.type';
-import { Settings } from './types/settings.type';
+import { Settings } from './types/settings.interface';
 import { ControlsComponent } from './components/controls/controls.component';
 import { MazeComponent } from './components/maze/maze.component';
 import { MazeService } from './services/maze.service';

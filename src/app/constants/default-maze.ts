@@ -1,5 +1,5 @@
-import { Position } from '../types/position.interface';
-import { Size } from '../types/size.interface';
+import { Position } from '../types/general/position.interface';
+import { Size } from '../types/general/size.interface';
 
 export const DEFAULT_SIZE: Size = {
   width: 10,

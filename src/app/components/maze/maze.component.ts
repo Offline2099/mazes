@@ -4,9 +4,9 @@ import { timer, take } from 'rxjs';
 import { Direction } from '../../constants/direction.enum';
 import { BG_COLOR, WALL_COLOR, PATH_COLOR } from '../../constants/default-colors';
 import { REDRAW_DELAY_MS } from '../../constants/delays';
-import { Position } from '../../types/position.interface';
+import { Position } from '../../types/general/position.interface';
 import { Maze } from '../../types/maze.type';
-import { Settings } from '../../types/settings.type';
+import { Settings } from '../../types/settings.interface';
 import { UtilityService } from '../../services/utility.service';
 import { MazeService } from '../../services/maze.service';
 

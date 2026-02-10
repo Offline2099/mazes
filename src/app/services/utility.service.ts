@@ -1,7 +1,7 @@
 import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 import { Direction } from '../constants/direction.enum';
-import { Position } from '../types/position.interface';
-import { Range } from '../types/range.interface';
+import { Position } from '../types/general/position.interface';
+import { Range } from '../types/general/range.interface';
 
 @Injectable({
   providedIn: 'root'

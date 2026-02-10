@@ -1,4 +1,4 @@
-import { Size } from './size.interface';
+import { Size } from './general/size.interface';
 
 export interface Settings {
   blockSize: Size;

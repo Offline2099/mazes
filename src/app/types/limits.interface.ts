@@ -1,4 +1,4 @@
-import { Range } from './range.interface';
+import { Range } from './general/range.interface';
 
 export interface Limits {
   mazeWidth: Range;

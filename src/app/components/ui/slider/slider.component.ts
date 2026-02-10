@@ -1,7 +1,7 @@
 import { Component, ElementRef, viewChild, model, output } from '@angular/core';
 import { Subscription, fromEvent, debounceTime, map } from 'rxjs';
 import { SLIDER_DEBOUNCE_MS } from '../../../constants/delays';
-import { Slider } from '../../../types/slider.interface';
+import { Slider } from '../../../types/ui/slider.interface';
 
 @Component({
   selector: 'app-slider',

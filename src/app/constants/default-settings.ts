@@ -1,4 +1,4 @@
-import { Settings } from '../types/settings.type';
+import { Settings } from '../types/settings.interface';
 
 export const DEFAULT_SETTINGS: Settings = {
   blockSize: {

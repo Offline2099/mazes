@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Direction } from '../constants/direction.enum';
-import { Position } from '../types/position.interface';
-import { Range } from '../types/range.interface';
-import { Size } from '../types/size.interface';
+import { Position } from '../types/general/position.interface';
+import { Range } from '../types/general/range.interface';
+import { Size } from '../types/general/size.interface';
 import { Maze } from '../types/maze.type';
 import { UtilityService } from './utility.service';
 

@@ -1,6 +1,6 @@
 import { Component, HostListener, input, output } from '@angular/core';
 import { NgClass } from '@angular/common';
-import { Checkbox } from '../../../types/checkbox.interface';
+import { Checkbox } from '../../../types/ui/checkbox.interface';
 
 @Component({
   selector: 'app-checkbox',
