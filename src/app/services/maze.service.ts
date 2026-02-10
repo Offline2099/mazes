@@ -77,20 +77,8 @@ export class MazeService {
     };
   }
 
-  isPositionOnShortestPath(maze: Maze, position: Position): boolean {
+  isOnShortestPath(maze: Maze, position: Position): boolean {
     return maze.shortestPath.find(value => this.utility.isSamePosition(position, value)) !== undefined;
-  }
-
-  isSegmentOnShortestPath(maze: Maze, position: Position, direction: Direction): boolean {
-    for (const [index, value] of maze.shortestPath.entries()) {
-      if (!this.utility.isSamePosition(position, value)) continue;
-      const previous: Position | undefined = maze.shortestPath[index - 1];
-      const next: Position | undefined = maze.shortestPath[index + 1];
-      const directionTo: Position = this.utility.move(position, direction);
-      return (previous && this.utility.isSamePosition(previous, directionTo))
-        || (next && this.utility.isSamePosition(next, directionTo));
-    }
-    return false;
   }
 
   private isVisited(maze: Maze, position: Position): boolean {

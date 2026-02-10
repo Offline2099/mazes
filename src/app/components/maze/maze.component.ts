@@ -101,19 +101,20 @@ export class MazeComponent {
   drawWays(maze: Maze, settings: Settings, ctx: CanvasRenderingContext2D): void {
     maze.space.forEach((column, x) => {
       column.forEach((_, y) => {
+        const isOnShortestPath: boolean = this.mazeService.isOnShortestPath(maze, { x, y });
+        const isPathVisible: boolean = settings.showPaths || (settings.showShortestPath && isOnShortestPath);
+        if (isPathVisible) this.drawSpot(settings, { x, y }, isOnShortestPath, ctx);
         this.maze().space[x][y].forEach(direction => {
-          if (settings.showPaths || settings.showShortestPath) 
-            this.drawSpot(maze, settings, { x, y }, ctx);
           switch (direction) {
             case Direction.down:
               this.removeWallSegmentDown(settings, { x, y }, ctx);
-              if (settings.showPaths || settings.showShortestPath) 
-                this.drawPathSegmentDown(maze, settings, { x, y }, ctx);
+              if (!isPathVisible) break;
+              this.drawPathSegmentDown(maze, settings, { x, y }, isOnShortestPath, ctx);
               break;
             case Direction.right:
               this.removeWallSegmentRight(settings, { x, y }, ctx);
-              if (settings.showPaths || settings.showShortestPath)
-                this.drawPathSegmentRight(maze, settings, { x, y }, ctx);
+              if (!isPathVisible) break;
+              this.drawPathSegmentRight(maze, settings, { x, y }, isOnShortestPath, ctx);
               break;
             default:
               break;
@@ -123,12 +124,15 @@ export class MazeComponent {
     });
   }
 
-  drawSpot(maze: Maze, settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
-    const isShortest = this.mazeService.isPositionOnShortestPath(maze, position);
-    ctx.fillStyle = isShortest && settings.showShortestPath
+  drawSpot(
+    settings: Settings,
+    position: Position,
+    isPositionOnShortestPath: boolean,
+    ctx: CanvasRenderingContext2D
+  ): void {
+    ctx.fillStyle = isPositionOnShortestPath && settings.showShortestPath
       ? SHORTEST_PATH_COLOR 
       : PATH_COLOR;
-    if (!isShortest && !settings.showPaths) return;
     ctx.fillRect(
       this.blockCenterX(settings, position.x) - settings.pathThickness / 2,
       this.blockCenterY(settings, position.y) - settings.pathThickness / 2,
@@ -147,10 +151,17 @@ export class MazeComponent {
     );
   }
 
-  drawPathSegmentDown(maze: Maze, settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
-    const isShortest: boolean = this.mazeService.isSegmentOnShortestPath(maze, position, Direction.down);
-    if (!isShortest && !settings.showPaths) return;
-    ctx.fillStyle = isShortest && settings.showShortestPath
+  drawPathSegmentDown(
+    maze: Maze,
+    settings: Settings,
+    position: Position,
+    isPositionOnShortestPath: boolean,
+    ctx: CanvasRenderingContext2D
+  ): void {
+    const isSegmentOnShortestPath: boolean = isPositionOnShortestPath
+      && this.mazeService.isOnShortestPath(maze, this.utility.move(position, Direction.down));
+    if (!settings.showPaths && !isSegmentOnShortestPath) return;
+    ctx.fillStyle = isSegmentOnShortestPath && settings.showShortestPath
       ? SHORTEST_PATH_COLOR 
       : PATH_COLOR;
     ctx.fillRect(
@@ -171,10 +182,17 @@ export class MazeComponent {
     );
   }
 
-  drawPathSegmentRight(maze: Maze, settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
-    const isShortest: boolean = this.mazeService.isSegmentOnShortestPath(maze, position, Direction.right);
-    if (!isShortest && !settings.showPaths) return;
-    ctx.fillStyle = isShortest && settings.showShortestPath
+  drawPathSegmentRight(
+    maze: Maze,
+    settings: Settings,
+    position: Position,
+    isPositionOnShortestPath: boolean,
+    ctx: CanvasRenderingContext2D
+  ): void {
+    const isSegmentOnShortestPath: boolean = isPositionOnShortestPath
+      && this.mazeService.isOnShortestPath(maze, this.utility.move(position, Direction.right));
+    if (!settings.showPaths && !isSegmentOnShortestPath) return;
+    ctx.fillStyle = isSegmentOnShortestPath && settings.showShortestPath
       ? SHORTEST_PATH_COLOR 
       : PATH_COLOR;
     ctx.fillRect(
