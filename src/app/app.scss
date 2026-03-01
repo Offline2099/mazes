@@ -57,5 +57,8 @@ footer {
     @include hover {
       color: deepskyblue;
     }
+    @include mobile {
+      font-size: 14px;
+    }
   }
 }

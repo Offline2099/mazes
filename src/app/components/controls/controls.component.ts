@@ -9,14 +9,15 @@ import { Size } from '../../types/general/size.interface';
 import { Maze } from '../../types/maze.interface';
 import { Settings } from '../../types/settings.interface';
 import { Slider } from '../../types/ui/slider.interface';
-import { Checkbox } from '../../types/ui/checkbox.interface';
+import { ControlsGroupComponent } from '../ui/controls-group/controls-group.component';
 import { SliderComponent } from '../ui/slider/slider.component';
+import { Checkbox } from '../../types/ui/checkbox.interface';
 import { CheckboxComponent } from '../ui/checkbox/checkbox.component';
 import { MazeService } from '../../services/maze.service';
 
 @Component({
   selector: 'app-controls',
-  imports: [NgClass, SliderComponent, CheckboxComponent],
+  imports: [NgClass, ControlsGroupComponent, SliderComponent, CheckboxComponent],
   templateUrl: './controls.component.html',
   styleUrl: './controls.component.scss',
 })

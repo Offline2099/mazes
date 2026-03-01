@@ -23,42 +23,6 @@
   }
 }
 
-.controls-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
-  border-radius: 8px;
-  background-color: $bg-element;
-  @include desktop-small {
-    width: 800px;
-  }
-  @include tablet {
-    width: 580px;
-  }
-  @include mobile {
-    width: calc(100% - 10px);
-    flex-direction: column;
-  }
-}
-
-h2 {
-  width: 100%;
-  padding: 0 0 2px 5px;
-  border-bottom: 1px solid $border-normal;
-  font-size: 20px;
-  font-weight: 500;
-  @include desktop-small {
-    font-size: 19px;
-  }
-  @include tablet {
-    font-size: 18px;
-  }
-  @include mobile {
-    font-size: 16px;
-  }
-}
-
 button {
   min-width: 140px;
   margin: 10px 10px 0 10px;
@@ -79,7 +43,7 @@ button {
     font-size: 16px;
   }
   @include mobile {
-    min-width: 100px;
+    min-width: 90px;
     margin: 10px 5px 0 5px;
     font-size: 14px;
   }
