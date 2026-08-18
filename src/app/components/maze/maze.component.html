@@ -1,6 +1,13 @@
 <canvas
-  #canvas
+  #canvas1
   [width]="width()"
   [height]="height()"
-  [ngClass]="{ 'hidden': !isDisplayed() }">
+  [class.hidden]="activeCanvasId() === 2">
+</canvas>
+<canvas
+  #canvas2
+  class="overlay"
+  [width]="width()"
+  [height]="height()"
+  [class.hidden]="activeCanvasId() === 1">
 </canvas>

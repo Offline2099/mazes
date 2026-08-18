@@ -1,11 +1,14 @@
 @use '../../../scss' as *;
 
+$area-padding: 10px;
+
 :host {
+  position: relative;
   display: flex;
   justify-content: space-around;
   max-width: calc(100% - 20px);
   margin: 10px auto;
-  padding: 10px;
+  padding: $area-padding;
   border-radius: 8px;
   background-color: $bg-element;
   overflow-x: auto;
@@ -13,8 +16,13 @@
 
 canvas {
   transition: .3s;
+  transition-timing-function: linear;
+  opacity: 1;
+  &.overlay {
+    position: absolute;
+    inset: $area-padding;
+  }
   &.hidden {
-    transition: 0;
     opacity: 0;
   }
 }

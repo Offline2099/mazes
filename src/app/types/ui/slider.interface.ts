@@ -4,5 +4,4 @@ export interface Slider {
   name: string;
   range: Range;
   step: number;
-  value: number;
 }

@@ -1,8 +1,5 @@
-import { Component, viewChild } from '@angular/core';
-import { DEFAULT_MAZE_SIZE } from './constants/default-maze-size';
+import { Component, inject, viewChild } from '@angular/core';
 import { DEFAULT_SETTINGS } from './constants/default-settings';
-import { Maze } from './types/maze.interface';
-import { Settings } from './types/settings.interface';
 import { ControlsComponent } from './components/controls/controls.component';
 import { MazeComponent } from './components/maze/maze.component';
 import { MazeService } from './services/maze.service';
@@ -15,22 +12,16 @@ import { MazeService } from './services/maze.service';
 })
 export class App {
 
-  maze: Maze;
-  settings: Settings;
-  isGenerated: boolean = false;
+  private mazeService = inject(MazeService);
 
-  mazeComponent = viewChild(MazeComponent);
+  mazeComponent = viewChild.required(MazeComponent);
 
-  constructor(private mazeService: MazeService) {
-    this.maze = this.mazeService.createMazeObject(DEFAULT_MAZE_SIZE);
-    this.settings = { 
-      ...DEFAULT_SETTINGS, 
-      blockSize: { ...DEFAULT_SETTINGS.blockSize }
-    };
-  }
+  maze = this.mazeService.createMazeObject();
+  settings = DEFAULT_SETTINGS;
+  isGenerated = false;
 
   saveMaze(): void {
-    this.mazeComponent()?.saveMaze();
+    this.mazeComponent().saveMaze();
   }
 
 }

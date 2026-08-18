@@ -1,20 +1,20 @@
-import { Component, HostListener, input, output } from '@angular/core';
-import { NgClass } from '@angular/common';
-import { Checkbox } from '../../../types/ui/checkbox.interface';
+import { Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-checkbox',
-  imports: [NgClass],
+  host: { '(click)': 'onClick()' },
+  imports: [],
   templateUrl: './checkbox.component.html',
-  styleUrl: './checkbox.component.scss',
+  styleUrl: './checkbox.component.scss'
 })
 export class CheckboxComponent {
 
-  @HostListener('click') onClick() {
-    this.valueChange.emit(!this.checkbox().value);
-  }
-
-  checkbox = input.required<Checkbox>();
+  text = input.required<string>();
+  value = input.required<boolean>();
   valueChange = output<boolean>();
+
+  onClick() {
+    this.valueChange.emit(!this.value());
+  }
 
 }

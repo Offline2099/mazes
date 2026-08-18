@@ -1,31 +1,37 @@
-import { Component, ElementRef, viewChild, model, output } from '@angular/core';
+import { Component, ElementRef, viewChild, input, output } from '@angular/core';
 import { Subscription, fromEvent, debounceTime, map } from 'rxjs';
-import { SLIDER_DEBOUNCE_MS } from '../../../constants/delays';
 import { Slider } from '../../../types/ui/slider.interface';
+
+const SLIDER_DEBOUNCE_MS = 150;
 
 @Component({
   selector: 'app-slider',
   imports: [],
   templateUrl: './slider.component.html',
-  styleUrl: './slider.component.scss',
+  styleUrl: './slider.component.scss'
 })
 export class SliderComponent {
 
-  slider = model.required<Slider>();
-  input = viewChild.required<ElementRef>('sliderInput');
+  slider = input.required<Slider>();
+  value = input.required<number>();
+
+  sliderInput = viewChild.required<ElementRef<HTMLInputElement>>('sliderInput');
+  
   valueChange = output<number>();
 
-  valueSub!: Subscription;
+  sub: Subscription | null = null;
 
   ngOnInit(): void {
-    this.valueSub = fromEvent(this.input().nativeElement, 'input').pipe(
-      debounceTime(SLIDER_DEBOUNCE_MS),
-      map(event => Number(((event as Event).target as HTMLInputElement).value))
-    ).subscribe(value => this.valueChange.emit(value));
+    this.sub = fromEvent(this.sliderInput().nativeElement, 'input')
+      .pipe(
+        debounceTime(SLIDER_DEBOUNCE_MS),
+        map(event => Number((event.target as HTMLInputElement).value))
+      )
+      .subscribe(value => this.valueChange.emit(value));
   }
 
   ngOnDestroy(): void {
-    if (this.valueSub) this.valueSub.unsubscribe();
+    this.sub?.unsubscribe();
   }
 
 }

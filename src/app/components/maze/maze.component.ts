@@ -1,241 +1,90 @@
-import { Component, ElementRef, viewChild, signal, input, computed, effect } from '@angular/core';
-import { NgClass } from '@angular/common';
-import { timer, take } from 'rxjs';
-import { Direction } from '../../constants/direction.enum';
-import { BG_COLOR, WALL_COLOR, PATH_COLOR, SHORTEST_PATH_COLOR } from '../../constants/default-colors';
-import { REDRAW_DELAY_MS } from '../../constants/delays';
-import { Position } from '../../types/general/position.interface';
+import {
+  Component, ElementRef, viewChild, inject, signal, input, computed, effect, untracked
+} from '@angular/core';
 import { Maze } from '../../types/maze.interface';
 import { Settings } from '../../types/settings.interface';
-import { UtilityService } from '../../services/utility.service';
-import { MazeService } from '../../services/maze.service';
+import { DownloadService } from '../../services/download.service';
+import { DrawingService } from '../../services/drawing.service';
 
 @Component({
   selector: 'app-maze',
-  imports: [NgClass],
+  imports: [],
   templateUrl: './maze.component.html',
-  styleUrl: './maze.component.scss',
+  styleUrl: './maze.component.scss'
 })
 export class MazeComponent {
+
+  private drawingService = inject(DrawingService);
+  private download = inject(DownloadService);
 
   maze = input.required<Maze>();
   settings = input.required<Settings>();
   isGenerated = input.required<boolean>();
 
-  canvasRef = viewChild.required<ElementRef>('canvas');
+  canvasRef1 = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas1');
+  canvasRef2 = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas2');
 
-  width = computed<number>(() => this.totalWidth(this.maze(), this.settings()));
-  height = computed<number>(() => this.totalHeight(this.maze(), this.settings()));
+  activeCanvasId = signal(1);
+  activeCanvasRef = computed(() => this.getActiveCanvas(this.activeCanvasId()));
 
-  isDisplayed = signal<boolean>(true);
+  width = computed(() => this.currentWidthPx(this.settings()));
+  height = computed(() => this.currentHeightPx(this.settings()));
 
-  constructor(
-    private container: ElementRef,
-    private utility: UtilityService,
-    private mazeService: MazeService
-  ) {
-    effect(() => {
-      this.maze();
-      this.settings();
-      this.isGenerated();
-      this.isDisplayed.set(false);
-      timer(REDRAW_DELAY_MS).pipe(take(1)).subscribe(() => {
-        this.isDisplayed.set(true);
-        this.drawMaze(this.maze(), this.settings(), this.isGenerated());
-      });
-    });
+  frameId: number | null = 0;
+
+  constructor() {
+    effect(() => this.drawMaze(this.maze(), this.settings(), this.isGenerated()));
   }
 
-  totalWidth(maze: Maze, settings: Settings): number {
-    const blockCount: number = this.mazeService.width(maze);
+  getActiveCanvas(id: number): ElementRef<HTMLCanvasElement> {
+    return id === 1 ? this.canvasRef1() : this.canvasRef2();
+  }
+
+  switchCanvas(): void {
+    this.activeCanvasId.update(value => (value === 1 ? 2 : 1));
+  }
+
+  currentWidthPx(settings: Settings): number {
+    const blockCount = settings.mazeSize.width;
     return settings.blockSize.width * blockCount + settings.wallThickness * (blockCount + 1);
   }
 
-  totalHeight(maze: Maze, settings: Settings): number {
-    const blockCount: number = this.mazeService.height(maze);
+  currentHeightPx(settings: Settings): number {
+    const blockCount = settings.mazeSize.height;
     return settings.blockSize.height * blockCount + settings.wallThickness * (blockCount + 1);
   }
 
-  blockPositionX(settings: Settings, x: number): number {
-    return settings.blockSize.width * x + settings.wallThickness * (x + 1);
-  }
-
-  blockPositionY(settings: Settings, y: number): number {
-    return settings.blockSize.height * y + settings.wallThickness * (y + 1);
-  }
-
-  blockCenterX(settings: Settings, x: number): number {
-    return this.blockPositionX(settings, x) + settings.blockSize.width / 2;
-  }
-
-  blockCenterY(settings: Settings, y: number): number {
-    return this.blockPositionY(settings, y) + settings.blockSize.height / 2;
-  }
-
   drawMaze(maze: Maze, settings: Settings, isGenerated: boolean): void {
-    const canvas: HTMLCanvasElement = this.canvasRef().nativeElement;
-    const ctx: CanvasRenderingContext2D | null = canvas.getContext('2d');
-    if (!ctx) return;
-    this.drawGrid(maze, settings, canvas, ctx);
-    if (isGenerated) {
-      this.drawEntrance(settings, ctx);
-      this.drawWays(maze, settings, ctx);
-      this.drawExit(maze, settings, ctx);
-    }
-  }
-
-  drawGrid(maze: Maze, settings: Settings, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = BG_COLOR;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = WALL_COLOR;
-    [...Array(this.mazeService.width(maze) + 1).keys()].forEach(index => {
-      const x: number = this.blockPositionX(settings, index) - settings.wallThickness;
-      ctx.fillRect(x, 0, settings.wallThickness, canvas.height);
+    if (this.frameId !== null) cancelAnimationFrame(this.frameId);
+    this.switchCanvas();
+    this.frameId = requestAnimationFrame(() => {
+      const canvas = untracked(() => this.activeCanvasRef().nativeElement);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      this.drawingService.drawMaze(maze, settings, isGenerated, ctx);
     });
-    [...Array(this.mazeService.height(maze) + 1).keys()].forEach(index => {
-      const y: number = this.blockPositionY(settings, index) - settings.wallThickness;
-      ctx.fillRect(0, y, canvas.width, settings.wallThickness);
-    });
-  }
-
-  drawWays(maze: Maze, settings: Settings, ctx: CanvasRenderingContext2D): void {
-    maze.space.forEach((column, x) => {
-      column.forEach((_, y) => {
-        const isOnShortestPath: boolean = this.mazeService.isOnShortestPath(maze, { x, y });
-        const isPathVisible: boolean = settings.showPaths || (settings.showShortestPath && isOnShortestPath);
-        if (isPathVisible) this.drawSpot(settings, { x, y }, isOnShortestPath, ctx);
-        this.maze().space[x][y].forEach(direction => {
-          switch (direction) {
-            case Direction.down:
-              this.removeWallSegmentDown(settings, { x, y }, ctx);
-              if (!isPathVisible) break;
-              this.drawPathSegmentDown(maze, settings, { x, y }, isOnShortestPath, ctx);
-              break;
-            case Direction.right:
-              this.removeWallSegmentRight(settings, { x, y }, ctx);
-              if (!isPathVisible) break;
-              this.drawPathSegmentRight(maze, settings, { x, y }, isOnShortestPath, ctx);
-              break;
-            default:
-              break;
-          }
-        });
-      });
-    });
-  }
-
-  drawSpot(
-    settings: Settings,
-    position: Position,
-    isPositionOnShortestPath: boolean,
-    ctx: CanvasRenderingContext2D
-  ): void {
-    ctx.fillStyle = isPositionOnShortestPath && settings.showShortestPath
-      ? SHORTEST_PATH_COLOR 
-      : PATH_COLOR;
-    ctx.fillRect(
-      this.blockCenterX(settings, position.x) - settings.pathThickness / 2,
-      this.blockCenterY(settings, position.y) - settings.pathThickness / 2,
-      settings.pathThickness,
-      settings.pathThickness
-    )
-  }
-
-  removeWallSegmentDown(settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = BG_COLOR;
-    ctx.fillRect(
-      this.blockPositionX(settings, position.x),
-      this.blockPositionY(settings, position.y + 1) - settings.wallThickness,
-      settings.blockSize.width,
-      settings.wallThickness
-    );
-  }
-
-  drawPathSegmentDown(
-    maze: Maze,
-    settings: Settings,
-    position: Position,
-    isPositionOnShortestPath: boolean,
-    ctx: CanvasRenderingContext2D
-  ): void {
-    const isSegmentOnShortestPath: boolean = isPositionOnShortestPath
-      && this.mazeService.isOnShortestPath(maze, this.utility.move(position, Direction.down));
-    if (!settings.showPaths && !isSegmentOnShortestPath) return;
-    ctx.fillStyle = isSegmentOnShortestPath && settings.showShortestPath
-      ? SHORTEST_PATH_COLOR 
-      : PATH_COLOR;
-    ctx.fillRect(
-      this.blockCenterX(settings, position.x) - settings.pathThickness / 2,
-      this.blockCenterY(settings, position.y) + settings.pathThickness / 2,
-      settings.pathThickness,
-      settings.blockSize.height + settings.wallThickness - settings.pathThickness
-    );
-  }
-
-  removeWallSegmentRight(settings: Settings, position: Position, ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = BG_COLOR;
-    ctx.fillRect(
-      this.blockPositionX(settings, position.x + 1) - settings.wallThickness,
-      this.blockPositionY(settings, position.y),
-      settings.wallThickness,
-      settings.blockSize.height
-    );
-  }
-
-  drawPathSegmentRight(
-    maze: Maze,
-    settings: Settings,
-    position: Position,
-    isPositionOnShortestPath: boolean,
-    ctx: CanvasRenderingContext2D
-  ): void {
-    const isSegmentOnShortestPath: boolean = isPositionOnShortestPath
-      && this.mazeService.isOnShortestPath(maze, this.utility.move(position, Direction.right));
-    if (!settings.showPaths && !isSegmentOnShortestPath) return;
-    ctx.fillStyle = isSegmentOnShortestPath && settings.showShortestPath
-      ? SHORTEST_PATH_COLOR 
-      : PATH_COLOR;
-    ctx.fillRect(
-      this.blockCenterX(settings, position.x) + settings.pathThickness / 2,
-      this.blockCenterY(settings, position.y) - settings.pathThickness / 2,
-      settings.blockSize.width + settings.wallThickness - settings.pathThickness,
-      settings.pathThickness
-    );
-  }
-
-  drawEntrance(settings: Settings, ctx: CanvasRenderingContext2D): void {
-    this.removeWallSegmentRight(settings, { x: -1, y: 0 }, ctx);
-    if (!settings.showPaths && !settings.showShortestPath) return;
-    ctx.fillStyle = settings.showShortestPath ? SHORTEST_PATH_COLOR : PATH_COLOR;
-    ctx.fillRect(
-      0,
-      this.blockCenterY(settings, 0) - settings.pathThickness / 2,
-      settings.blockSize.width / 2 + settings.wallThickness - settings.pathThickness / 2,
-      settings.pathThickness
-    );
-  }
-
-  drawExit(maze: Maze, settings: Settings, ctx: CanvasRenderingContext2D): void {
-    const lastBlockPosition : Position = this.mazeService.lastBlockPosition(maze);
-    this.removeWallSegmentRight(settings, lastBlockPosition, ctx);
-    if (!settings.showPaths && !settings.showShortestPath) return;
-    ctx.fillStyle = settings.showShortestPath ? SHORTEST_PATH_COLOR : PATH_COLOR;
-    ctx.fillRect(
-      this.blockPositionX(settings, lastBlockPosition.x) 
-        + settings.blockSize.width / 2 + settings.pathThickness / 2,
-      this.blockPositionY(settings, lastBlockPosition.y) 
-        + settings.blockSize.height / 2 - settings.pathThickness / 2,
-      settings.blockSize.width + settings.wallThickness,
-      settings.pathThickness
-    );
   }
 
   saveMaze(): void {
-    this.utility.downloadAsPNG(
-      this.canvasRef().nativeElement,
-      this.container.nativeElement,
-      'maze'
+    this.download.downloadCanvasAsPNG(
+      this.activeCanvasRef().nativeElement,
+      `maze-${this.timestamp()}`
     );
+  }
+
+  timestamp(): string {
+    const pad = (n: number, padding: number = 2) => {
+      return String(n).padStart(padding, '0');
+    };
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const min = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    const ms = pad(d.getMilliseconds(), 3);
+    return `${yyyy}-${mm}-${dd}-${hh}-${min}-${ss}-${ms}`;
   }
 
 }

@@ -1,23 +1,20 @@
-import { Injectable } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { Direction } from '../constants/direction.enum';
+import { DEFAULT_SETTINGS } from '../constants/default-settings';
 import { Position } from '../types/general/position.interface';
-import { Range } from '../types/general/range.interface';
+import { Range2D } from '../types/general/range2d.interface';
 import { Size } from '../types/general/size.interface';
 import { Maze } from '../types/maze.interface';
-import { UtilityService } from './utility.service';
+import { RNGService } from './rng.service';
+import { GeometryService } from './geometry.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class MazeService {
 
-  constructor(private utility: UtilityService) { }
+  private rng = inject(RNGService);
+  private geometry = inject(GeometryService);
 
-  //===========================================================================
-  //  Maze Generation
-  //===========================================================================
-
-  createMazeObject(size: Size): Maze {
+  createMazeObject(size: Size = DEFAULT_SETTINGS.mazeSize): Maze {
     return {
       space: Array.from(
         { length: size.width },
@@ -28,19 +25,19 @@ export class MazeService {
   }
 
   generateMaze(maze: Maze): Maze {
-    const entrance: Position = { x: 0, y: 0 };
-    const exit: Position = this.lastBlockPosition(maze);
-    const path: Position[] = [entrance];
-    let position: Position = { ...entrance };
-    let direction: Direction | null = this.randomDirection(maze, position);
+    const entrance = { x: 0, y: 0 } as Position;
+    const exit = this.lastBlockPosition(maze);
+    const path = [entrance];
+    let position = entrance;
+    let direction = this.randomDirection(maze, position);
     if (direction) maze.space[position.x][position.y].push(direction);
     while (direction !== null) {
-      position = this.utility.move(position, direction);
-      maze.space[position.x][position.y].push(this.utility.oppositeDirection(direction));
+      position = this.geometry.move(position, direction);
+      maze.space[position.x][position.y].push(this.geometry.oppositeDirection(direction));
       direction = this.randomDirection(maze, position);
       if (direction) maze.space[position.x][position.y].push(direction);
       path.push({ ...position });
-      if (this.utility.isSamePosition(position, exit)) maze.shortestPath = [...path];
+      if (this.geometry.isSamePosition(position, exit)) maze.shortestPath = [...path];
       while (direction === null && path.length > 1) {
         path.pop();
         position = { ...path[path.length - 1] };
@@ -51,54 +48,52 @@ export class MazeService {
     return maze;
   }
 
-  //===========================================================================
-  //  Maze Utility
-  //===========================================================================
-
-  width(maze: Maze): number {
+  currentWidth(maze: Maze): number {
     return maze.space.length;
   }
 
-  height(maze: Maze): number {
+  currentHeight(maze: Maze): number {
+    if (!maze.space.length) return 0;
     return maze.space[0].length;
   }
 
-  size(maze: Maze): Size {
+  lastBlockPosition(maze: Maze): Position {
     return {
-      width: this.width(maze),
-      height: this.height(maze)
-    };
-  }
-
-  lastBlockPosition(maze: Maze) : Position {
-    return {
-      x: this.width(maze) - 1,
-      y: this.height(maze) - 1
+      x: this.currentWidth(maze) - 1,
+      y: this.currentHeight(maze) - 1
     };
   }
 
   isOnShortestPath(maze: Maze, position: Position): boolean {
-    return maze.shortestPath.find(value => this.utility.isSamePosition(position, value)) !== undefined;
+    return maze.shortestPath
+      .find(value => this.geometry.isSamePosition(position, value)) !== undefined;
+  }
+
+  private randomDirection(maze: Maze, position: Position): Direction | null {
+    const directions = this.availableDirections(maze, position);
+    return directions.length ? this.rng.randomFromArray(directions) : null;
+  }
+
+  private availableDirections(maze: Maze, position: Position): Direction[] {
+    return Object.values(Direction).filter(direction => {
+      if (typeof direction !== 'number') return false;
+      const newPosition = this.geometry.move(position, direction);
+      return (
+        !this.geometry.isOutsideArea(this.mazeToRange2D(maze), newPosition) &&
+        !this.isVisited(maze, newPosition)
+      );
+    }) as Direction[];
+  }
+
+  private mazeToRange2D(maze: Maze): Range2D {
+    return {
+      x: { min: 0, max: this.currentWidth(maze) - 1 },
+      y: { min: 0, max: this.currentHeight(maze) - 1 }
+    };
   }
 
   private isVisited(maze: Maze, position: Position): boolean {
     return maze.space[position.x][position.y].length > 0;
-  }
-
-  private availableDirections(maze: Maze, position: Position): Direction[] {
-    const rangeX: Range = { min: 0, max: this.width(maze) - 1 };
-    const rangeY: Range = { min: 0, max: this.height(maze) - 1 };
-    return Object.values(Direction).filter(Number)
-      .filter(direction => {
-        const shifted: Position = this.utility.move(position, direction as Direction);
-        return !this.utility.isOutsideArea(rangeX, rangeY, shifted) && !this.isVisited(maze, shifted);
-      }) as Direction[];
-  }
-
-  private randomDirection(maze: Maze, position: Position): Direction | null {
-    const directions: Direction[] = this.availableDirections(maze, position);
-    if (directions.length === 0) return null;    
-    return this.utility.randomFromArray(directions);
   }
 
 }

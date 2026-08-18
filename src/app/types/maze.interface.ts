@@ -4,4 +4,4 @@ import { Position } from './general/position.interface';
 export interface Maze {
   space: Direction[][][];
   shortestPath: Position[];
-} 
+}
